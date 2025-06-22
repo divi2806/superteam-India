@@ -261,3 +261,86 @@ html, body {
     color: rgba(130, 87, 255, 0.9) !important;
   }
 }
+
+/* Mobile Navigation Enhancements */
+@media (max-width: 767px) {
+  /* Touch targets should be at least 44px */
+  .mobile-nav-button {
+    min-height: 44px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  /* Enhanced touch feedback */
+  .mobile-nav-button:active {
+    transform: scale(0.98);
+    background-color: hsl(var(--secondary));
+  }
+  
+  /* Improve button responsiveness */
+  .mobile-nav-button:hover {
+    background-color: hsl(var(--secondary) / 0.8);
+  }
+  
+  /* Profile section touch feedback */
+  .mobile-profile-section {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .mobile-profile-section:active {
+    transform: scale(0.98);
+    background-color: hsl(var(--secondary) / 0.4);
+  }
+  
+  /* Enhanced hamburger button */
+  .hamburger-button {
+    min-width: 44px;
+    min-height: 44px;
+    background: hsl(var(--primary) / 0.1);
+    border: 1px solid hsl(var(--primary) / 0.2);
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .hamburger-button:hover {
+    background: hsl(var(--primary) / 0.2);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+  
+  .hamburger-button:active {
+    transform: scale(0.95);
+    background: hsl(var(--primary) / 0.3);
+  }
+  
+  /* Sheet animation improvements */
+  .mobile-sheet-content {
+    animation: slideInFromRight 0.3s ease-out;
+  }
+  
+  @keyframes slideInFromRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Better visual feedback for mobile buttons */
+  .mobile-button-primary:active {
+    background: hsl(var(--primary) / 0.8);
+    transform: scale(0.98);
+  }
+  
+  .mobile-button-ghost:active {
+    background: hsl(var(--secondary));
+    transform: scale(0.98);
+  }
+  
+  .mobile-button-danger:active {
+    background: hsl(var(--destructive) / 0.2);
+    transform: scale(0.98);
+  }
+}

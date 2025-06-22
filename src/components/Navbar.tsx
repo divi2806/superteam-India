@@ -7,8 +7,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NotificationBell } from '@/components/NotificationBell';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -40,6 +41,80 @@ const Navbar = () => {
     setIsMenuOpen(false);
   };
 
+  // Mobile navigation items component
+  const MobileNavItems = () => (
+    <div className="flex flex-col space-y-2 w-full">
+      <Button 
+        variant={isActive('/') ? 'default' : 'ghost'} 
+        className={`mobile-nav-button w-full justify-start ${isActive('/') 
+          ? 'bg-primary hover:bg-primary/90 text-white mobile-button-primary' 
+          : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80 mobile-button-ghost'
+        }`}
+        onClick={(e) => handleNavigation('/', e)}
+      >
+        <MapPin className="w-4 h-4 mr-3" />
+        Explore
+      </Button>
+
+      {user && (
+        <Button 
+          variant={isActive('/calendar') ? 'default' : 'ghost'}
+          className={`mobile-nav-button w-full justify-start ${isActive('/calendar') 
+            ? 'bg-primary hover:bg-primary/90 text-white mobile-button-primary' 
+            : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80 mobile-button-ghost'
+          }`}
+          onClick={(e) => handleNavigation('/calendar', e)}
+        >
+          <CalendarDays className="w-4 h-4 mr-3" />
+          Calendar
+        </Button>
+      )}
+
+      {user && (
+        <Button 
+          variant={isActive('/community') ? 'default' : 'ghost'}
+          className={`mobile-nav-button w-full justify-start ${isActive('/community') 
+            ? 'bg-primary hover:bg-primary/90 text-white mobile-button-primary' 
+            : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80 mobile-button-ghost'
+          }`}
+          onClick={(e) => handleNavigation('/community', e)}
+        >
+          <Users className="w-4 h-4 mr-3" />
+          Communities
+        </Button>
+      )}
+
+      {user && (
+        <Button 
+          variant={isActive('/create-event') ? 'default' : 'ghost'}
+          className={`mobile-nav-button w-full justify-start ${isActive('/create-event') 
+            ? 'bg-primary hover:bg-primary/90 text-white mobile-button-primary' 
+            : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80 mobile-button-ghost'
+          }`}
+          onClick={(e) => handleNavigation('/create-event', e)}
+        >
+          <Plus className="w-4 h-4 mr-3" />
+          Create
+        </Button>
+      )}
+
+      {user && (
+        <Button 
+          variant={isActive('/my-events') ? 'default' : 'ghost'}
+          className={`mobile-nav-button w-full justify-start ${isActive('/my-events') 
+            ? 'bg-primary hover:bg-primary/90 text-white mobile-button-primary' 
+            : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80 mobile-button-ghost'
+          }`}
+          onClick={(e) => handleNavigation('/my-events', e)}
+        >
+          <Calendar className="w-4 h-4 mr-3" />
+          My Events
+        </Button>
+      )}
+    </div>
+  );
+
+  // Desktop navigation items component
   const NavLinks = () => (
     <>
       <Button 
@@ -47,8 +122,8 @@ const Navbar = () => {
         className={`${isActive('/') 
           ? 'bg-primary hover:bg-primary/90 text-white relative overflow-hidden group transition-all duration-300' 
           : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50 group transition-all duration-300 overflow-hidden'
-        } ${isMobile ? 'w-full justify-start' : 'size-sm'}`}
-        size={isMobile ? "default" : "sm"}
+        } size-sm`}
+        size="sm"
         onClick={(e) => handleNavigation('/', e)}
       >
         <MapPin className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:scale-110" />
@@ -66,8 +141,8 @@ const Navbar = () => {
           className={`${isActive('/calendar') 
             ? 'bg-primary hover:bg-primary/90 text-white relative overflow-hidden group transition-all duration-300' 
             : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50 group transition-all duration-300 overflow-hidden'
-          } ${isMobile ? 'w-full justify-start' : 'size-sm'}`}
-          size={isMobile ? "default" : "sm"}
+          } size-sm`}
+          size="sm"
           onClick={(e) => handleNavigation('/calendar', e)}
         >
           <CalendarDays className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:scale-110" />
@@ -86,8 +161,8 @@ const Navbar = () => {
           className={`${isActive('/community') 
             ? 'bg-primary hover:bg-primary/90 text-white relative overflow-hidden group transition-all duration-300' 
             : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50 group transition-all duration-300 overflow-hidden'
-          } ${isMobile ? 'w-full justify-start' : 'size-sm'}`}
-          size={isMobile ? "default" : "sm"}
+          } size-sm`}
+          size="sm"
           onClick={(e) => handleNavigation('/community', e)}
         >
           <Users className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:scale-110" />
@@ -109,8 +184,8 @@ const Navbar = () => {
                 className={`${isActive('/create-event') 
                   ? 'bg-primary hover:bg-primary/90 text-white relative overflow-hidden group transition-all duration-300' 
                   : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50 group transition-all duration-300 overflow-hidden'
-                } ${isMobile ? 'w-full justify-start' : 'size-sm'}`}
-                size={isMobile ? "default" : "sm"}
+                } size-sm`}
+                size="sm"
                 onClick={(e) => handleNavigation('/create-event', e)}
               >
                 <Plus className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-90" />
@@ -122,11 +197,9 @@ const Navbar = () => {
                 )}
               </Button>
             </TooltipTrigger>
-            {!isMobile && (
-              <TooltipContent>
-                <p>Create community events</p>
-              </TooltipContent>
-            )}
+            <TooltipContent>
+              <p>Create community events</p>
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       )}
@@ -137,8 +210,8 @@ const Navbar = () => {
           className={`${isActive('/my-events') 
             ? 'bg-primary hover:bg-primary/90 text-white relative overflow-hidden group transition-all duration-300' 
             : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50 group transition-all duration-300 overflow-hidden'
-          } ${isMobile ? 'w-full justify-start' : 'size-sm'}`}
-          size={isMobile ? "default" : "sm"}
+          } size-sm`}
+          size="sm"
           onClick={(e) => handleNavigation('/my-events', e)}
         >
           <Calendar className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:scale-110" />
@@ -184,54 +257,85 @@ const Navbar = () => {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[80%] sm:w-[350px] bg-background/95 backdrop-blur-lg border-border/30">
-                  <div className="flex flex-col space-y-4 mt-8">
-                    <NavLinks />
+                <SheetContent side="right" className="mobile-sheet-content w-[80%] sm:w-[350px] bg-background/95 backdrop-blur-lg border-border/30">
+                  <SheetHeader>
+                    <VisuallyHidden>
+                      <SheetTitle>Navigation Menu</SheetTitle>
+                      <SheetDescription>Access all navigation options and user settings</SheetDescription>
+                    </VisuallyHidden>
+                  </SheetHeader>
+                  
+                  <div className="flex flex-col space-y-6 mt-8">
+                    {/* Navigation Links */}
+                    <div className="space-y-2">
+                      <MobileNavItems />
+                    </div>
                     
                     {!user ? (
-                      <Button 
-                        variant="default" 
-                        className="bg-primary hover:bg-primary/90 text-white relative overflow-hidden group transition-all duration-300 mt-4"
-                        onClick={signInWithGoogle}
-                      >
-                        <span className="relative z-10">Sign In</span>
-                        <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                      </Button>
+                                             <div className="border-t border-border/20 pt-4">
+                         <Button 
+                           variant="default" 
+                           className="mobile-nav-button mobile-button-primary w-full bg-primary hover:bg-primary/90 text-white"
+                           onClick={(e) => {
+                             e.preventDefault();
+                             signInWithGoogle();
+                             setIsMenuOpen(false);
+                           }}
+                         >
+                           Sign In
+                         </Button>
+                       </div>
                     ) : (
-                      <div className="border-t border-border/20 pt-4 mt-4">
-                        <div className="flex items-center gap-3 p-2">
-                          <Avatar className="h-10 w-10 border border-border/50">
+                      <div className="border-t border-border/20 pt-4 space-y-4">
+                        {/* User Profile Section */}
+                        <div className="mobile-profile-section flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/20">
+                          <Avatar className="h-12 w-12 border border-border/50">
                             <AvatarImage src={user.photoURL || ''} alt={user.displayName || ''} />
                             <AvatarFallback className="bg-primary/20 text-primary font-medium">
                               {user.displayName?.charAt(0) || user.email?.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="flex flex-col">
-                            <p className="font-medium text-foreground">{user.displayName}</p>
-                            <p className="text-xs text-muted-foreground truncate w-48">{user.email}</p>
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <p className="font-medium text-foreground truncate">{user.displayName}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                           </div>
                         </div>
                         
-                        <Button 
-                          variant="ghost"
-                          className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-secondary/50 mt-2"
-                          onClick={(e) => handleNavigation('/profile', e)}
-                        >
-                          <User className="w-4 h-4 mr-2" />
-                          Profile
-                        </Button>
-                        
-                        <Button 
-                          variant="ghost"
-                          className="w-full justify-start text-red-500/80 hover:text-red-500 hover:bg-red-500/10 mt-2"
-                          onClick={() => {
-                            logout();
-                            setIsMenuOpen(false);
-                          }}
-                        >
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Logout
-                        </Button>
+                        {/* Profile and Logout Buttons */}
+                        <div className="space-y-2">
+                          <Button 
+                            variant="ghost"
+                            className="mobile-nav-button mobile-button-ghost w-full justify-start text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsMenuOpen(false);
+                              setTimeout(() => navigate('/profile'), 100);
+                            }}
+                          >
+                            <User className="w-4 h-4 mr-3" />
+                            Profile
+                          </Button>
+                          
+                          <Button 
+                            variant="ghost"
+                            className="mobile-nav-button mobile-button-danger w-full justify-start text-red-500/80 hover:text-red-500 hover:bg-red-500/10"
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              try {
+                                setIsMenuOpen(false);
+                                await logout();
+                                navigate('/');
+                              } catch (error) {
+                                console.error('Logout error:', error);
+                              }
+                            }}
+                          >
+                            <LogOut className="w-4 h-4 mr-3" />
+                            Logout
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -285,7 +389,10 @@ const Navbar = () => {
                     <div className="p-2">
                       <DropdownMenuItem 
                         className="hover:bg-primary/10 text-muted-foreground hover:text-foreground cursor-pointer rounded-md transition-all duration-200"
-                        onClick={(e) => handleNavigation('/profile', e)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate('/profile');
+                        }}
                       >
                         <User className="mr-3 h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
                         <span className="relative">
@@ -295,7 +402,10 @@ const Navbar = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         className="hover:bg-primary/10 text-muted-foreground hover:text-foreground cursor-pointer rounded-md transition-all duration-200"
-                        onClick={(e) => handleNavigation('/calendar', e)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate('/calendar');
+                        }}
                       >
                         <CalendarDays className="mr-3 h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
                         <span className="relative">
@@ -305,7 +415,10 @@ const Navbar = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         className="hover:bg-primary/10 text-muted-foreground hover:text-foreground cursor-pointer rounded-md transition-all duration-200"
-                        onClick={(e) => handleNavigation('/community', e)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate('/community');
+                        }}
                       >
                         <Users className="mr-3 h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
                         <span className="relative">
@@ -316,7 +429,15 @@ const Navbar = () => {
                       <DropdownMenuSeparator className="bg-border/20" />
                       <DropdownMenuItem 
                         className="hover:bg-red-500/10 text-muted-foreground hover:text-red-500 cursor-pointer rounded-md transition-all duration-200"
-                        onClick={() => logout()}
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          try {
+                            await logout();
+                            navigate('/');
+                          } catch (error) {
+                            console.error('Logout error:', error);
+                          }
+                        }}
                       >
                         <LogOut className="mr-3 h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
                         <span className="relative">

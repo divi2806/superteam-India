@@ -233,33 +233,127 @@ export const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }
         date: new Date().toISOString(),
       };
 
-      if (currentEvent.requireApproval) {
-        // Add to pending registrations
-        await updateDoc(doc(db, 'events', currentEvent.id), {
-          pendingRegistrations: arrayUnion(registrationData),
-        });
+      // Check if this is a recurring event and auto-register for future occurrences
+      if ((currentEvent.isRecurring || currentEvent.isRecurringChild) && currentEvent.recurringOptions) {
+        let parentId = currentEvent.isRecurringChild 
+          ? currentEvent.recurringOptions.parentEventId 
+          : currentEvent.id;
 
-        toast({
-          title: 'Registration submitted',
-          description: 'Your registration is pending approval from the event organizer.',
-        });
+        if (parentId) {
+          try {
+            // Get all events in the recurring series
+            const allRecurringEventsQuery = query(
+              collection(db, 'events'),
+              where('recurringOptions.parentEventId', '==', parentId)
+            );
+            const recurringSnapshot = await getDocs(allRecurringEventsQuery);
+            
+            // Also get the parent event
+            const parentEventDoc = await getDoc(doc(db, 'events', parentId));
+            
+            const allRecurringEvents = [];
+            if (parentEventDoc.exists()) {
+              allRecurringEvents.push({ id: parentId, ...parentEventDoc.data() });
+            }
+            
+            recurringSnapshot.forEach((doc) => {
+              allRecurringEvents.push({ id: doc.id, ...doc.data() });
+            });
+
+            // Filter for future events (including today)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const futureEvents = allRecurringEvents.filter(event => {
+              const eventDate = new Date(event.date);
+              eventDate.setHours(0, 0, 0, 0);
+              return eventDate >= today;
+            });
+
+            // Auto-register for all future events in the recurring series
+            const registrationPromises = futureEvents.map(async (event) => {
+              // Skip if user is already registered for this specific event
+              const existingRegistration = event.registrations?.find(reg => reg.userId === user.uid);
+              const existingPendingRegistration = event.pendingRegistrations?.find(reg => reg.userId === user.uid);
+              
+              if (existingRegistration || existingPendingRegistration) {
+                return; // Skip this event as user is already registered
+              }
+
+              if (event.requireApproval) {
+                // Add to pending registrations
+                await updateDoc(doc(db, 'events', event.id), {
+                  pendingRegistrations: arrayUnion(registrationData),
+                });
+              } else {
+                // Add directly to approved registrations
+                await updateDoc(doc(db, 'events', event.id), {
+                  registrations: arrayUnion({
+                    ...registrationData,
+                    status: 'approved',
+                  }),
+                });
+              }
+            });
+
+            await Promise.all(registrationPromises);
+
+            toast({
+              title: 'Recurring Event Registration',
+              description: `You've been registered for all ${futureEvents.length} upcoming occurrences of this recurring event!`,
+            });
+          } catch (error) {
+            console.error('Error registering for recurring events:', error);
+            // Fall back to registering for just the current event
+            if (currentEvent.requireApproval) {
+              await updateDoc(doc(db, 'events', currentEvent.id), {
+                pendingRegistrations: arrayUnion(registrationData),
+              });
+            } else {
+              await updateDoc(doc(db, 'events', currentEvent.id), {
+                registrations: arrayUnion({
+                  ...registrationData,
+                  status: 'approved',
+                }),
+              });
+            }
+            
+            toast({
+              title: 'Registration submitted',
+              description: 'Registered for current event. There was an issue auto-registering for other occurrences.',
+            });
+          }
+        }
       } else {
-        // Add directly to approved registrations
-        await updateDoc(doc(db, 'events', currentEvent.id), {
-          registrations: arrayUnion({
-            ...registrationData,
-            status: 'approved',
-          }),
-        });
+        // Regular single event registration
+        if (currentEvent.requireApproval) {
+          // Add to pending registrations
+          await updateDoc(doc(db, 'events', currentEvent.id), {
+            pendingRegistrations: arrayUnion(registrationData),
+          });
 
-        toast({
-          title: 'Registration successful',
-          description: 'You have successfully registered for this event.',
-        });
+          toast({
+            title: 'Registration submitted',
+            description: 'Your registration is pending approval from the event organizer.',
+          });
+        } else {
+          // Add directly to approved registrations
+          await updateDoc(doc(db, 'events', currentEvent.id), {
+            registrations: arrayUnion({
+              ...registrationData,
+              status: 'approved',
+            }),
+          });
+
+          toast({
+            title: 'Registration successful',
+            description: 'You have successfully registered for this event.',
+          });
+        }
       }
 
       setHasRegistered(true);
-      setRegistrationStatus('pending');
+      setRegistrationStatus(currentEvent.requireApproval ? 'pending' : 'approved');
       setIsRegistering(false);
     } catch (error) {
       console.error('Error registering for event:', error);
@@ -569,13 +663,58 @@ export const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }
 
             {/* Event details */}
             <div className="flex flex-col gap-3 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary/80" />
-                <span>{currentEvent.date}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary/80" />
-                <span>{currentEvent.time}</span>
+              <div className="flex items-center gap-3">
+                {/* Date Badge - Compact Luma Style */}
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-md bg-secondary/30 border border-border/30 flex flex-col items-center justify-center text-center shadow-sm">
+                    <div className="text-[10px] font-semibold text-primary uppercase tracking-wider leading-none">
+                      {(() => {
+                        const eventDate = new Date(currentEvent.date);
+                        const today = new Date();
+                        const tomorrow = new Date(today);
+                        tomorrow.setDate(today.getDate() + 1);
+                        
+                        const isToday = eventDate.toDateString() === today.toDateString();
+                        const isTomorrow = eventDate.toDateString() === tomorrow.toDateString();
+                        
+                        if (isToday) return 'today';
+                        if (isTomorrow) return 'tomorrow';
+                        
+                        return eventDate.toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'short' 
+                        });
+                      })()}
+                    </div>
+                    <div className="text-[9px] text-muted-foreground mt-1 capitalize leading-none">
+                      {new Date(currentEvent.date).toLocaleDateString('en-US', { weekday: 'long' }).slice(0, 3)}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Date and Time Info */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary/80" />
+                    <span>{format(new Date(currentEvent.date), 'MMMM d, yyyy')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary/80" />
+                    <span>
+                      {(() => {
+                        const time24 = currentEvent.time.includes(':') ? currentEvent.time : `${currentEvent.time}:00`;
+                        const [hours, minutes] = time24.split(':');
+                        const hour = parseInt(hours);
+                        const min = parseInt(minutes) || 0;
+                        
+                        if (hour === 0) return `12:${min.toString().padStart(2, '0')} am`;
+                        if (hour < 12) return `${hour}:${min.toString().padStart(2, '0')} am`;
+                        if (hour === 12) return `12:${min.toString().padStart(2, '0')} pm`;
+                        return `${hour - 12}:${min.toString().padStart(2, '0')} pm`;
+                      })()}
+                    </span>
+                  </div>
+                </div>
               </div>
               
               {/* Meeting link for online events */}
@@ -825,6 +964,21 @@ export const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }
             {/* Registration form */}
             {!hasRegistered && !isOrganizer ? (
               <div className="border-t border-border/20 pt-4">
+                {/* Recurring Event Info */}
+                {isRecurringEvent && (
+                  <div className="mb-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <div className="flex items-start gap-2">
+                      <Repeat className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="text-foreground font-medium">Recurring Event</p>
+                        <p className="text-muted-foreground mt-1">
+                          Registering for this event will automatically register you for all future occurrences in this series.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {currentEvent.isFull ? (
                   <div className="text-center py-6 px-4 bg-amber-500/10 rounded-lg border border-amber-500/30">
                     <Users className="h-10 w-10 text-amber-500/70 mx-auto mb-3" />

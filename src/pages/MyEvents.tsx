@@ -242,11 +242,42 @@ const MyEvents = () => {
                           <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground mt-1.5 ${isMobile ? 'text-xs' : ''}`}>
                             <div className="flex items-center space-x-1.5">
                               <Calendar className="w-3.5 h-3.5" />
-                              <span>{event.date}</span>
+                              <span>
+                                {(() => {
+                                  const eventDate = new Date(event.date);
+                                  const today = new Date();
+                                  const tomorrow = new Date(today);
+                                  tomorrow.setDate(today.getDate() + 1);
+                                  
+                                  const isToday = eventDate.toDateString() === today.toDateString();
+                                  const isTomorrow = eventDate.toDateString() === tomorrow.toDateString();
+                                  
+                                  if (isToday) return 'Today';
+                                  if (isTomorrow) return 'Tomorrow';
+                                  
+                                  return eventDate.toLocaleDateString('en-GB', { 
+                                    day: 'numeric', 
+                                    month: 'short',
+                                    weekday: 'short'
+                                  });
+                                })()}
+                              </span>
                             </div>
                             <div className="flex items-center space-x-1.5">
                               <Clock className="w-3.5 h-3.5" />
-                              <span>{event.time}</span>
+                              <span>
+                                {(() => {
+                                  const time24 = event.time.includes(':') ? event.time : `${event.time}:00`;
+                                  const [hours, minutes] = time24.split(':');
+                                  const hour = parseInt(hours);
+                                  const min = parseInt(minutes) || 0;
+                                  
+                                  if (hour === 0) return `12:${min.toString().padStart(2, '0')} am`;
+                                  if (hour < 12) return `${hour}:${min.toString().padStart(2, '0')} am`;
+                                  if (hour === 12) return `12:${min.toString().padStart(2, '0')} pm`;
+                                  return `${hour - 12}:${min.toString().padStart(2, '0')} pm`;
+                                })()}
+                              </span>
                             </div>
                             <div className="flex items-center space-x-1.5">
                               <MapPin className="w-3.5 h-3.5" />
@@ -572,11 +603,42 @@ const MyEvents = () => {
                       <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground ${isMobile ? 'text-xs' : ''}`}>
                         <div className="flex items-center space-x-1.5">
                           <Calendar className="w-3.5 h-3.5" />
-                          <span>{reg.eventDate}</span>
+                          <span>
+                            {(() => {
+                              const eventDate = new Date(reg.eventDate);
+                              const today = new Date();
+                              const tomorrow = new Date(today);
+                              tomorrow.setDate(today.getDate() + 1);
+                              
+                              const isToday = eventDate.toDateString() === today.toDateString();
+                              const isTomorrow = eventDate.toDateString() === tomorrow.toDateString();
+                              
+                              if (isToday) return 'Today';
+                              if (isTomorrow) return 'Tomorrow';
+                              
+                              return eventDate.toLocaleDateString('en-GB', { 
+                                day: 'numeric', 
+                                month: 'short',
+                                weekday: 'short'
+                              });
+                            })()}
+                          </span>
                         </div>
                         <div className="flex items-center space-x-1.5">
                           <Clock className="w-3.5 h-3.5" />
-                          <span>{reg.eventTime}</span>
+                          <span>
+                            {(() => {
+                              const time24 = reg.eventTime.includes(':') ? reg.eventTime : `${reg.eventTime}:00`;
+                              const [hours, minutes] = time24.split(':');
+                              const hour = parseInt(hours);
+                              const min = parseInt(minutes) || 0;
+                              
+                              if (hour === 0) return `12:${min.toString().padStart(2, '0')} am`;
+                              if (hour < 12) return `${hour}:${min.toString().padStart(2, '0')} am`;
+                              if (hour === 12) return `12:${min.toString().padStart(2, '0')} pm`;
+                              return `${hour - 12}:${min.toString().padStart(2, '0')} pm`;
+                            })()}
+                          </span>
                         </div>
                         <div className="flex items-center space-x-1.5">
                           <MapPin className="w-3.5 h-3.5" />

@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { TabsContent, Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Calendar as CalendarIcon, Users, Share, ClipboardCopy, Bell, BellOff, Plus, ChevronLeft, ChevronRight, ExternalLink, Edit, Upload, ImageIcon, Trash2, AlertTriangle, Clock, Calendar, User, MoreVertical, UserPlus, UserMinus, ShieldCheck, ShieldX, MapPin, X, Linkedin, Twitter, Globe, Check } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Share, ClipboardCopy, Bell, BellOff, Plus, ChevronLeft, ChevronRight, ExternalLink, Edit, Upload, ImageIcon, Trash2, AlertTriangle, Clock, Calendar, User, MoreVertical, UserPlus, UserMinus, ShieldCheck, ShieldX, MapPin, X, Linkedin, Twitter, Globe, Check, Repeat } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -1537,49 +1537,127 @@ const CommunityDetail = () => {
                 
                 {events.length > 0 ? (
                   <div className="space-y-4">
-                    {events.map((event) => (
-                      <Card 
-                        key={event.id} 
-                        className="glass-dark border-border/30 hover:border-primary/30 transition-colors overflow-hidden"
-                        onClick={() => navigate(`/event/${event.id}`)}
-                      >
-                        <div className="flex flex-col md:flex-row cursor-pointer">
-                          <div className="md:w-1/4 h-32 md:h-auto relative">
-                            {event.imageURL ? (
-                              <img 
-                                src={event.imageURL} 
-                                alt={event.name} 
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                                <CalendarIcon className="h-10 w-10 text-primary/40" />
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="p-4 flex-grow">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h3 className="text-lg font-bold text-foreground">{event.name}</h3>
-                                <div className="flex items-center text-sm text-muted-foreground mt-1">
-                                  <CalendarIcon className="h-4 w-4 mr-2" />
-                                  <span>{event.date} at {event.time}</span>
+                    {events.map((event) => {
+                      const eventDate = new Date(event.date);
+                      const today = new Date();
+                      const tomorrow = new Date(today);
+                      tomorrow.setDate(today.getDate() + 1);
+                      
+                      // Format date display like Luma
+                      const formatEventDate = () => {
+                        const isToday = eventDate.toDateString() === today.toDateString();
+                        const isTomorrow = eventDate.toDateString() === tomorrow.toDateString();
+                        
+                        if (isToday) return 'today';
+                        if (isTomorrow) return 'tomorrow';
+                        
+                        // Format as "24 Jun" for other dates
+                        return eventDate.toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'short' 
+                        });
+                      };
+                      
+                      const getDayName = () => {
+                        return eventDate.toLocaleDateString('en-US', { weekday: 'long' });
+                      };
+                      
+                      // Parse time and format it properly
+                      const formatTime = (timeStr: string) => {
+                        // Handle various time formats
+                        const time24 = timeStr.includes(':') ? timeStr : `${timeStr}:00`;
+                        const [hours, minutes] = time24.split(':');
+                        const hour = parseInt(hours);
+                        const min = parseInt(minutes) || 0;
+                        
+                        if (hour === 0) return `12:${min.toString().padStart(2, '0')} am`;
+                        if (hour < 12) return `${hour}:${min.toString().padStart(2, '0')} am`;
+                        if (hour === 12) return `12:${min.toString().padStart(2, '0')} pm`;
+                        return `${hour - 12}:${min.toString().padStart(2, '0')} pm`;
+                      };
+
+                      return (
+                        <Card 
+                          key={event.id} 
+                          className="glass-dark border-border/30 hover:border-primary/30 transition-all duration-200 hover:shadow-lg cursor-pointer group"
+                          onClick={() => navigate(`/event/${event.id}`)}
+                        >
+                          <CardContent className="p-0">
+                            <div className="flex items-start gap-4 p-4">
+                                                             {/* Date Badge - Compact Luma Style */}
+                               <div className="flex-shrink-0">
+                                 <div className="w-14 h-14 rounded-md bg-secondary/30 border border-border/30 flex flex-col items-center justify-center text-center shadow-sm">
+                                   <div className="text-[10px] font-semibold text-primary uppercase tracking-wider leading-none">
+                                     {formatEventDate()}
+                                   </div>
+                                   <div className="text-[9px] text-muted-foreground mt-1 capitalize leading-none">
+                                     {getDayName().slice(0, 3)}
+                                   </div>
+                                 </div>
+                               </div>
+                              
+                              {/* Event Content */}
+                              <div className="flex-1 min-w-0">
+                                {/* Time */}
+                                <div className="text-sm text-muted-foreground mb-1">
+                                  {formatTime(event.time)}
+                                </div>
+                                
+                                {/* Event Title */}
+                                <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2">
+                                  {event.name}
+                                </h3>
+                                
+                                {/* Organizer */}
+                                <div className="flex items-center text-sm text-muted-foreground mb-2">
+                                  <User className="h-3 w-3 mr-1" />
+                                  <span>By {event.createdByName}</span>
+                                </div>
+                                
+                                {/* Location */}
+                                <div className="flex items-center text-sm text-muted-foreground mb-3">
+                                  <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                                  <span className="truncate">{event.venue}</span>
+                                </div>
+                                
+                                {/* Badges */}
+                                <div className="flex items-center gap-2">
+                                  <Badge 
+                                    variant="outline" 
+                                    className={event.mode === 'online' 
+                                      ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' 
+                                      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                    }
+                                  >
+                                    {event.mode === 'online' ? 'Online' : 'In-Person'}
+                                  </Badge>
+                                  
+                                  {(event as any).isRecurring && (
+                                    <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/30">
+                                      <Repeat className="h-3 w-3 mr-1" />
+                                      Recurring
+                                    </Badge>
+                                  )}
                                 </div>
                               </div>
                               
-                              <Badge className={event.mode === 'online' ? 'bg-primary/10 text-primary' : 'bg-emerald-500/10 text-emerald-500'}>
-                                {event.mode === 'online' ? 'Online' : 'In-Person'}
-                              </Badge>
+                              {/* Event Image */}
+                              {event.imageURL && (
+                                <div className="flex-shrink-0">
+                                  <div className="w-20 h-16 rounded-lg overflow-hidden">
+                                    <img 
+                                      src={event.imageURL} 
+                                      alt={event.name} 
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                            
-                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                              {event.description || "No description provided."}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-background/20 rounded-lg border border-border/30">
@@ -1617,48 +1695,128 @@ const CommunityDetail = () => {
             </div>
             
             {events.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {events.map((event) => (
-                  <Card 
-                    key={event.id} 
-                    className="glass-dark border-border/30 hover:border-primary/30 transition-colors overflow-hidden flex flex-col"
-                    onClick={() => navigate(`/event/${event.id}`)}
-                  >
-                    <div className="relative h-40">
-                      {event.imageURL ? (
-                        <img 
-                          src={event.imageURL} 
-                          alt={event.name} 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                          <CalendarIcon className="h-10 w-10 text-primary/40" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <h3 className="text-lg font-bold text-foreground">{event.name}</h3>
-                        <div className="flex items-center text-xs text-muted-foreground mt-1">
-                          <CalendarIcon className="h-3 w-3 mr-1" />
-                          <span>{event.date} at {event.time}</span>
-                        </div>
-                      </div>
-                    </div>
+              <div className="space-y-4">
+                {events.map((event) => {
+                  const eventDate = new Date(event.date);
+                  const today = new Date();
+                  const tomorrow = new Date(today);
+                  tomorrow.setDate(today.getDate() + 1);
+                  
+                  // Format date display like Luma
+                  const formatEventDate = () => {
+                    const isToday = eventDate.toDateString() === today.toDateString();
+                    const isTomorrow = eventDate.toDateString() === tomorrow.toDateString();
                     
-                    <CardContent className="p-4 flex-grow">
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {event.description || "No description provided."}
-                      </p>
-                      
-                      <div className="flex items-center mt-4">
-                        <Badge className={event.mode === 'online' ? 'bg-primary/10 text-primary' : 'bg-emerald-500/10 text-emerald-500'}>
-                          {event.mode === 'online' ? 'Online' : 'In-Person'}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    if (isToday) return 'today';
+                    if (isTomorrow) return 'tomorrow';
+                    
+                    // Format as "24 Jun" for other dates
+                    return eventDate.toLocaleDateString('en-GB', { 
+                      day: 'numeric', 
+                      month: 'short' 
+                    });
+                  };
+                  
+                  const getDayName = () => {
+                    return eventDate.toLocaleDateString('en-US', { weekday: 'long' });
+                  };
+                  
+                  // Parse time and format it properly
+                  const formatTime = (timeStr: string) => {
+                    // Handle various time formats
+                    const time24 = timeStr.includes(':') ? timeStr : `${timeStr}:00`;
+                    const [hours, minutes] = time24.split(':');
+                    const hour = parseInt(hours);
+                    const min = parseInt(minutes) || 0;
+                    
+                    if (hour === 0) return `12:${min.toString().padStart(2, '0')} am`;
+                    if (hour < 12) return `${hour}:${min.toString().padStart(2, '0')} am`;
+                    if (hour === 12) return `12:${min.toString().padStart(2, '0')} pm`;
+                    return `${hour - 12}:${min.toString().padStart(2, '0')} pm`;
+                  };
+
+                  return (
+                    <Card 
+                      key={event.id} 
+                      className="glass-dark border-border/30 hover:border-primary/30 transition-all duration-200 hover:shadow-lg cursor-pointer group"
+                      onClick={() => navigate(`/event/${event.id}`)}
+                    >
+                      <CardContent className="p-0">
+                        <div className="flex items-start gap-4 p-4">
+                          {/* Date Badge - Compact Luma Style */}
+                          <div className="flex-shrink-0">
+                            <div className="w-14 h-14 rounded-md bg-secondary/30 border border-border/30 flex flex-col items-center justify-center text-center shadow-sm">
+                              <div className="text-[10px] font-semibold text-primary uppercase tracking-wider leading-none">
+                                {formatEventDate()}
+                              </div>
+                              <div className="text-[9px] text-muted-foreground mt-1 capitalize leading-none">
+                                {getDayName().slice(0, 3)}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Event Content */}
+                          <div className="flex-1 min-w-0">
+                            {/* Time */}
+                            <div className="text-sm text-muted-foreground mb-1">
+                              {formatTime(event.time)}
+                            </div>
+                            
+                            {/* Event Title */}
+                            <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2">
+                              {event.name}
+                            </h3>
+                            
+                            {/* Organizer */}
+                            <div className="flex items-center text-sm text-muted-foreground mb-2">
+                              <User className="h-3 w-3 mr-1" />
+                              <span>By {event.createdByName}</span>
+                            </div>
+                            
+                            {/* Location */}
+                            <div className="flex items-center text-sm text-muted-foreground mb-3">
+                              <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">{event.venue}</span>
+                            </div>
+                            
+                            {/* Badges */}
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant="outline" 
+                                className={event.mode === 'online' 
+                                  ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' 
+                                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                }
+                              >
+                                {event.mode === 'online' ? 'Online' : 'In-Person'}
+                              </Badge>
+                              
+                              {(event as any).isRecurring && (
+                                <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/30">
+                                  <Repeat className="h-3 w-3 mr-1" />
+                                  Recurring
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Event Image */}
+                          {event.imageURL && (
+                            <div className="flex-shrink-0">
+                              <div className="w-20 h-16 rounded-lg overflow-hidden">
+                                <img 
+                                  src={event.imageURL} 
+                                  alt={event.name} 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-12">

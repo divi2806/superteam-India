@@ -511,13 +511,70 @@ const CreateEvent = () => {
           'recurringOptions.parentEventId': mainEventDocRef.id
         });
         
+        // Check for existing approved registrations from previous recurring events by the same organizer
+        let autoRegistrations: any[] = [];
+        
+        try {
+          // Find previous recurring events created by the same organizer
+          const previousRecurringEventsQuery = query(
+            collection(db, 'events'),
+            where('createdBy', '==', user.uid),
+            where('isRecurring', '==', true)
+          );
+          
+          const previousEventsSnapshot = await getDocs(previousRecurringEventsQuery);
+          const allPreviousRegistrations = new Set<string>();
+          
+          // Collect all users who have been approved for previous recurring events by this organizer
+          previousEventsSnapshot.forEach((doc) => {
+            const eventData = doc.data();
+            if (eventData.registrations) {
+              eventData.registrations.forEach((reg: any) => {
+                if (reg.status === 'approved' && reg.userId !== user.uid) {
+                  allPreviousRegistrations.add(reg.userId);
+                }
+              });
+            }
+          });
+          
+          // If we found previous approved users, prepare auto-registrations
+          if (allPreviousRegistrations.size > 0) {
+            // Get user details for auto-registration
+            const autoRegPromises = Array.from(allPreviousRegistrations).map(async (userId) => {
+              try {
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                if (userDoc.exists()) {
+                  const userData = userDoc.data();
+                  return {
+                    userId: userId,
+                    name: userData.name || userData.displayName || 'Unknown User',
+                    email: userData.email || '',
+                    reason: 'Auto-registered from previous recurring event participation',
+                    date: new Date().toISOString(),
+                    status: 'approved' // Auto-approve returning participants
+                  };
+                }
+              } catch (error) {
+                console.error('Error fetching user data for auto-registration:', error);
+              }
+              return null;
+            });
+            
+            const resolvedAutoRegs = await Promise.all(autoRegPromises);
+            autoRegistrations = resolvedAutoRegs.filter(reg => reg !== null);
+          }
+        } catch (error) {
+          console.error('Error setting up auto-registrations:', error);
+          // Continue with normal event creation even if auto-registration setup fails
+        }
+
         // Create child events (future occurrences)
         const childEventPromises = recurringDates.slice(1).map(async (date, index) => {
           await addDoc(collection(db, 'events'), {
             ...eventBaseData,
             date,
-            registrations: [],
-            pendingRegistrations: [],
+            registrations: eventData.requireApproval ? [] : autoRegistrations, // Auto-register only if no approval required
+            pendingRegistrations: eventData.requireApproval ? autoRegistrations : [], // Add to pending if approval required
             hasNotifications: false,
             notifications: [],
             isRecurringChild: true,
@@ -528,11 +585,19 @@ const CreateEvent = () => {
           });
         });
         
+        // Also update the main event with auto-registrations
+        if (autoRegistrations.length > 0) {
+          await updateDoc(mainEventDocRef, {
+            registrations: eventData.requireApproval ? [] : autoRegistrations,
+            pendingRegistrations: eventData.requireApproval ? autoRegistrations : []
+          });
+        }
+        
         await Promise.all(childEventPromises);
         
         toast({
           title: "Recurring Event Created!",
-          description: `Created ${recurringDates.length} event occurrences.`,
+          description: `Created ${recurringDates.length} event occurrences.${autoRegistrations.length > 0 ? ` Auto-registered ${autoRegistrations.length} returning participants.` : ''}`,
         });
       } else {
         // Create a single event (non-recurring)
