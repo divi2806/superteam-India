@@ -13,6 +13,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useNavigate } from 'react-router-dom';
+
+const MOBILE_BREAKPOINT = 768;
 
 interface Notification {
   id: string;
@@ -27,8 +32,6 @@ interface Notification {
   read: boolean;
   actionable?: boolean;
 }
-
-
 
 const getReadClientNotificationIds = (): string[] => {
   if (typeof window === 'undefined') return [];
@@ -57,13 +60,114 @@ const addReadClientNotificationIds = (idsToAdd: string[]) => {
   }
 };
 
+// Notification content component shared between mobile and desktop
+const NotificationContent = ({ 
+  notifications, 
+  markAsRead, 
+  markAllAsRead,
+  setOpen 
+}: { 
+  notifications: Notification[], 
+  markAsRead: (id: string) => void, 
+  markAllAsRead: () => void,
+  setOpen: (open: boolean) => void
+}) => {
+  const navigate = useNavigate();
 
+  const handleNotificationClick = (notification: Notification) => {
+    markAsRead(notification.id);
+    setOpen(false);
+    navigate(`/event/${notification.eventId}`);
+  };
+
+  return (
+    <div className="w-full max-w-sm">
+      <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/30">
+        <h3 className="text-sm font-medium">Notifications</h3>
+        {notifications.some(n => !n.read) && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs h-7 px-2 hover:bg-secondary/80"
+            onClick={markAllAsRead}
+          >
+            Mark all as read
+          </Button>
+        )}
+      </div>
+      
+      <div className="max-h-[350px] overflow-y-auto pr-1">
+        {notifications.length > 0 ? (
+          <div className="space-y-2">
+            {notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-2 rounded-lg cursor-pointer transition-colors duration-200 ${
+                  notification.read ? 'bg-secondary/30' : 'bg-secondary/70'
+                }`}
+                onClick={() => handleNotificationClick(notification)}
+              >
+                <div className="flex items-start gap-2">
+                  {notification.communityImageURL ? (
+                    <Avatar className="h-8 w-8 border border-border/50">
+                      <AvatarImage src={notification.communityImageURL} alt={notification.communityName || ''} />
+                      <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                        {notification.communityName?.charAt(0) || 'E'}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Bell className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm text-foreground leading-snug">
+                      {notification.message}
+                    </p>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
+                      </span>
+                      {!notification.read && (
+                        <Badge variant="default" className="h-1.5 w-1.5 rounded-full p-0" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-8 text-center">
+            <Bell className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No notifications yet</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const NotificationBell: React.FC = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [subscribedCommunityIds, setSubscribedCommunityIds] = useState<string[]>([]);
+  const isMobileHook = useIsMobile();
+  const navigate = useNavigate();
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  
+  // Determine if mobile based on both the hook and direct window width
+  const isMobile = windowWidth < MOBILE_BREAKPOINT;
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -256,46 +360,72 @@ export const NotificationBell: React.FC = () => {
             }
             return n;
           });
-          await updateDoc(eventRef, { notifications: updatedNotifications });
+          return updateDoc(eventRef, { notifications: updatedNotifications });
         }
       });
 
       await Promise.all(updatePromises);
       
       toast({
-        title: "Notifications cleared",
-        description: "All notifications have been marked as read."
+        description: "All notifications marked as read",
       });
-      
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       toast({
         title: "Error",
-        description: "Failed to mark all notifications as read.",
-        variant: "destructive"
+        description: "Failed to mark notifications as read",
+        variant: "destructive",
       });
-      // Re-fetch to get the correct state from the server on error
-      fetchNotifications();
     }
   };
 
-  const unreadNotifications = notifications.filter(n => !n.read);
-  const unreadCount = unreadNotifications.length;
+  const unreadCount = notifications.filter(n => !n.read).length;
 
+  // Mobile version uses Sheet component
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="notification-bell-mobile">
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
+            )}
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-[85vw] sm:w-[350px] bg-background/95 backdrop-blur-lg border-border/30">
+          <div className="pt-6">
+            <NotificationContent 
+              notifications={notifications}
+              markAsRead={markAsRead}
+              markAllAsRead={markAllAsRead}
+              setOpen={setOpen}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop version uses Popover component
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative"
-          aria-label="Open notifications"
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative h-9 w-9 rounded-full hover:bg-secondary/50 transition-all duration-300"
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <Badge
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-primary text-primary-foreground text-xs"
-              variant="default"
+            <Badge 
+              variant="destructive" 
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
@@ -303,102 +433,16 @@ export const NotificationBell: React.FC = () => {
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-80 max-h-[500px] overflow-hidden flex flex-col p-0 bg-secondary/90 backdrop-blur-sm border-border/30 shadow-lg"
+        className="w-80 p-3 bg-secondary/90 backdrop-blur-sm border-border/30 shadow-xl" 
         align="end"
+        sideOffset={8}
       >
-        <div className="px-4 py-3 border-b border-border/20 flex justify-between items-center">
-          <h3 className="font-medium text-foreground">Notifications</h3>
-          {unreadCount > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-xs h-7 px-2 hover:bg-background/50"
-              onClick={markAllAsRead}
-            >
-              Mark all as read
-            </Button>
-          )}
-        </div>
-        <div className="overflow-y-auto max-h-[400px]">
-          {unreadNotifications.length > 0 ? (
-            <div className="divide-y divide-border/20">
-              {unreadNotifications.map(notification => (
-                <div 
-                  key={notification.id}
-                  className={`p-3 bg-secondary/30 ${notification.actionable ? 'cursor-pointer hover:bg-secondary/40 transition-colors duration-200' : ''}`}
-                  onClick={() => {
-                    markAsRead(notification.id);
-                    if (notification.actionable && notification.eventId) {
-                      window.location.href = `/event/${notification.eventId}`;
-                    }
-                    setOpen(false);
-                  }}
-                >
-                  <div className="flex items-start gap-3">
-                     <Avatar className="h-10 w-10 transition-transform duration-200 group-hover:scale-105">
-                      {notification.communityImageURL ? (
-                        <AvatarImage src={notification.communityImageURL} alt={notification.communityName || 'Community'} />
-                      ) : null}
-                      <AvatarFallback className={`
-                        ${notification.type === 'date_changed' ? 'bg-blue-500/20 text-blue-500' : ''}
-                        ${notification.type === 'venue_changed' ? 'bg-amber-500/20 text-amber-500' : ''}
-                        ${notification.type === 'message_added' ? 'bg-emerald-500/20 text-emerald-500' : ''}
-                        ${notification.type === 'new_community_event' ? 'bg-primary/20 text-primary' : ''}
-                        ${notification.type === 'registration_approved' ? 'bg-emerald-500/20 text-emerald-500' : ''}
-                      `}>
-                        {notification.type === 'date_changed' ? 'D' : 
-                         notification.type === 'venue_changed' ? 'V' : 
-                         notification.type === 'message_added' ? 'M' : 
-                         notification.type === 'new_community_event' ? 'E' : 
-                         notification.type === 'registration_approved' ? 'A' : '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <p className="text-sm font-medium group-hover:text-primary transition-colors duration-200">
-                          {notification.eventName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
-                        </p>
-                      </div>
-                      
-                      {notification.communityName && (
-                        <p className="text-xs font-medium text-primary mt-0.5">
-                          {notification.communityName}
-                        </p>
-                      )}
-                      
-                      <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
-                      
-                      {notification.actionable && (
-                        <div className="mt-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-7 text-xs bg-primary/10 hover:bg-primary/20 border-primary/20 text-primary hover:text-primary transition-colors duration-200"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markAsRead(notification.id);
-                              window.location.href = `/event/${notification.eventId}`;
-                            }}
-                          >
-                            View Event Details
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-6 text-center text-muted-foreground">
-              <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
-              <p className="text-sm">No new notifications</p>
-            </div>
-          )}
-        </div>
+        <NotificationContent 
+          notifications={notifications}
+          markAsRead={markAsRead}
+          markAllAsRead={markAllAsRead}
+          setOpen={setOpen}
+        />
       </PopoverContent>
     </Popover>
   );

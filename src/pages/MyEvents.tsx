@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Event {
   id: string;
@@ -68,6 +69,7 @@ interface MyRegistration {
 
 const MyEvents = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [myRegistrations, setMyRegistrations] = useState<MyRegistration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,10 +180,10 @@ const MyEvents = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background bg-grid-pattern">
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-background bg-grid-pattern">
         <Card className="glass-dark border-border/30 max-w-md w-full">
           <CardContent className="pt-6 text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Login Required</h2>
+            <h2 className={`font-bold text-foreground mb-4 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Login Required</h2>
             <p className="text-muted-foreground">Please login to view your events.</p>
           </CardContent>
         </Card>
@@ -191,7 +193,7 @@ const MyEvents = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background bg-grid-pattern">
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-background bg-grid-pattern">
         <div className="text-center">
           <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full mb-4 mx-auto"></div>
           <p className="text-muted-foreground">Loading your events...</p>
@@ -201,26 +203,26 @@ const MyEvents = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-background bg-grid-pattern">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground">
+    <div className="min-h-screen p-4 sm:p-6 bg-background bg-grid-pattern">
+      <div className={`mx-auto ${isMobile ? 'max-w-full' : 'max-w-5xl'}`}>
+        <div className={isMobile ? 'mb-6' : 'mb-8'}>
+          <h1 className={`font-bold text-foreground ${isMobile ? 'text-xl' : 'text-2xl'}`}>
             My Events
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
             Manage your events and registrations
           </p>
         </div>
 
         <Tabs defaultValue="hosted" className="w-full">
-          <TabsList className="mb-6 bg-secondary/50 p-1 rounded-lg">
-            <TabsTrigger value="hosted" className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+          <TabsList className={`bg-secondary/50 p-1 rounded-lg ${isMobile ? 'mb-4 w-full grid grid-cols-2' : 'mb-6'}`}>
+            <TabsTrigger value="hosted" className={`flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary ${isMobile ? 'text-sm' : ''}`}>
               <User className="w-4 h-4" />
-              <span>Hosted Events</span>
+              <span>{isMobile ? 'Hosted' : 'Hosted Events'}</span>
             </TabsTrigger>
-            <TabsTrigger value="registered" className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+            <TabsTrigger value="registered" className={`flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary ${isMobile ? 'text-sm' : ''}`}>
               <Ticket className="w-4 h-4" />
-              <span>Registered Events</span>
+              <span>{isMobile ? 'Registered' : 'Registered Events'}</span>
             </TabsTrigger>
           </TabsList>
           
@@ -233,11 +235,11 @@ const MyEvents = () => {
 
                 return (
                   <Card key={event.id} className="glass-dark border-border/30 hover:border-primary/20 transition-all duration-200">
-                    <CardHeader className="p-4 pb-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg text-foreground">{event.name}</CardTitle>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground mt-1.5">
+                    <CardHeader className={isMobile ? 'p-3 pb-2' : 'p-4 pb-3'}>
+                      <div className={`${isMobile ? 'space-y-3' : 'flex justify-between items-start'}`}>
+                        <div className={isMobile ? 'w-full' : ''}>
+                          <CardTitle className={`text-foreground ${isMobile ? 'text-base' : 'text-lg'}`}>{event.name}</CardTitle>
+                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground mt-1.5 ${isMobile ? 'text-xs' : ''}`}>
                             <div className="flex items-center space-x-1.5">
                               <Calendar className="w-3.5 h-3.5" />
                               <span>{event.date}</span>
@@ -248,35 +250,35 @@ const MyEvents = () => {
                             </div>
                             <div className="flex items-center space-x-1.5">
                               <MapPin className="w-3.5 h-3.5" />
-                              <span className="truncate max-w-[150px]">{event.venue}</span>
+                              <span className={`truncate ${isMobile ? 'max-w-[120px]' : 'max-w-[150px]'}`}>{event.venue}</span>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="flex items-center space-x-2">
-                            <Badge variant="secondary" className="bg-primary/10 text-primary text-xs py-1">
-                              {approvedCount} Approved
+                        <div className={`flex items-center ${isMobile ? 'justify-between w-full' : 'space-x-2'}`}>
+                          <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
+                            <Badge variant="secondary" className={`bg-primary/10 text-primary py-1 ${isMobile ? 'text-xs px-2' : 'text-xs'}`}>
+                              {approvedCount} {isMobile ? 'App.' : 'Approved'}
                             </Badge>
                             {pendingCount > 0 && (
-                              <Badge variant="outline" className="border-amber-400/50 text-amber-400 text-xs py-1">
-                                {pendingCount} Pending
+                              <Badge variant="outline" className={`border-amber-400/50 text-amber-400 py-1 ${isMobile ? 'text-xs px-2' : 'text-xs'}`}>
+                                {pendingCount} {isMobile ? 'Pend.' : 'Pending'}
                               </Badge>
                             )}
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant="outline"
                                     size="icon"
-                                    className={`h-8 w-8 rounded-full border-border/50 ${copiedEventId === event.id ? 'bg-teal-500/20 text-teal-500 border-teal-500/30' : 'bg-secondary/50 hover:bg-secondary/70'}`}
+                                    className={`${isMobile ? 'h-7 w-7' : 'h-8 w-8'} rounded-full border-border/50 ${copiedEventId === event.id ? 'bg-teal-500/20 text-teal-500 border-teal-500/30' : 'bg-secondary/50 hover:bg-secondary/70'}`}
                                     onClick={() => handleCopyLink(event.id)}
                                   >
                                     {copiedEventId === event.id ? (
-                                      <CheckCircle className="h-3.5 w-3.5" />
+                                      <CheckCircle className={`${isMobile ? 'h-3 w-3' : 'h-3.5 w-3.5'}`} />
                                     ) : (
-                                      <Share2 className="h-3.5 w-3.5" />
+                                      <Share2 className={`${isMobile ? 'h-3 w-3' : 'h-3.5 w-3.5'}`} />
                                     )}
                                   </Button>
                                 </TooltipTrigger>
@@ -331,41 +333,41 @@ const MyEvents = () => {
                     </CardHeader>
                     
                     {(pendingCount > 0 || approvedCount > 0) && (
-                      <CardContent className="p-4 pt-0">
+                      <CardContent className={isMobile ? 'p-3 pt-0' : 'p-4 pt-0'}>
                         {/* Pending Registrations Section */}
                         {pendingCount > 0 && (
-                          <div className="mb-4">
-                            <h3 className="text-sm font-medium text-foreground flex items-center space-x-2 mb-2">
+                          <div className={isMobile ? 'mb-3' : 'mb-4'}>
+                            <h3 className={`font-medium text-foreground flex items-center space-x-2 mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                               <Users className="w-4 h-4 text-amber-400" />
                               <span>Pending Registrations ({pendingCount})</span>
                             </h3>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div className={`grid gap-2 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                               {event.pendingRegistrations?.map((registration) => (
                                 <div
                                   key={registration.userId}
-                                  className="p-3 rounded-md bg-secondary/30 border border-border/20"
+                                  className={`rounded-md bg-secondary/30 border border-border/20 ${isMobile ? 'p-2' : 'p-3'}`}
                                 >
-                                  <div className="flex justify-between items-start">
+                                  <div className={`${isMobile ? 'space-y-2' : 'flex justify-between items-start'}`}>
                                     <div className="flex-1">
-                                      <div className="flex items-center space-x-2">
-                                        <h4 className="font-medium text-foreground text-sm">{registration.name}</h4>
+                                      <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
+                                        <h4 className={`font-medium text-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>{registration.name}</h4>
                                         <Badge
                                           variant="secondary"
-                                          className="bg-amber-400/10 text-amber-400 text-xs"
+                                          className={`bg-amber-400/10 text-amber-400 ${isMobile ? 'text-xs px-1' : 'text-xs'}`}
                                         >
                                           pending
                                         </Badge>
                                       </div>
                                       <p className="text-xs text-muted-foreground mt-1">{registration.email}</p>
-                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{registration.reason}</p>
+                                      <p className={`text-muted-foreground mt-1 line-clamp-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>{registration.reason}</p>
                                     </div>
                                     
-                                    <div className="flex space-x-1 ml-2">
+                                    <div className={`flex space-x-1 ${isMobile ? 'justify-end' : 'ml-2'}`}>
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-7 w-7 p-0 text-destructive border-destructive/20 bg-destructive/5"
+                                        className={`p-0 text-destructive border-destructive/20 bg-destructive/5 ${isMobile ? 'h-6 w-6' : 'h-7 w-7'}`}
                                         onClick={async () => {
                                           try {
                                             // Remove from pending registrations
@@ -401,11 +403,11 @@ const MyEvents = () => {
                                           }
                                         }}
                                       >
-                                        <X className="h-3.5 w-3.5" />
+                                        <X className={`${isMobile ? 'h-3 w-3' : 'h-3.5 w-3.5'}`} />
                                       </Button>
                                       <Button
                                         size="sm"
-                                        className="h-7 w-7 p-0 bg-emerald-500 hover:bg-emerald-600"
+                                        className={`p-0 bg-emerald-500 hover:bg-emerald-600 ${isMobile ? 'h-6 w-6' : 'h-7 w-7'}`}
                                         onClick={async () => {
                                           try {
                                             // Remove from pending registrations
@@ -456,7 +458,7 @@ const MyEvents = () => {
                                           }
                                         }}
                                       >
-                                        <Check className="h-3.5 w-3.5" />
+                                        <Check className={`${isMobile ? 'h-3 w-3' : 'h-3.5 w-3.5'}`} />
                                       </Button>
                                     </div>
                                   </div>
@@ -469,26 +471,26 @@ const MyEvents = () => {
                         {/* Approved Registrations Section */}
                         {approvedCount > 0 && (
                           <div>
-                            <h3 className="text-sm font-medium text-foreground flex items-center space-x-2 mb-2">
+                            <h3 className={`font-medium text-foreground flex items-center space-x-2 mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                               <Users className="w-4 h-4 text-emerald-500" />
                               <span>Approved Registrations ({approvedCount})</span>
                             </h3>
                             
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                            <div className={`grid gap-2 ${isMobile ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'}`}>
                               {event.registrations?.filter(r => r.status === 'approved').map((registration) => (
                                 <div
                                   key={registration.userId}
-                                  className="p-2 rounded-md bg-emerald-500/5 border border-emerald-500/20"
+                                  className={`rounded-md bg-emerald-500/5 border border-emerald-500/20 ${isMobile ? 'p-2' : 'p-2'}`}
                                 >
                                   <div className="flex items-center gap-2">
-                                    <Avatar className="h-6 w-6">
-                                      <AvatarFallback className="bg-emerald-500/20 text-emerald-500 text-xs">
+                                    <Avatar className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                                      <AvatarFallback className={`bg-emerald-500/20 text-emerald-500 ${isMobile ? 'text-xs' : 'text-xs'}`}>
                                         {registration.name.charAt(0)}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
-                                      <p className="font-medium text-foreground text-xs truncate">{registration.name}</p>
-                                      <p className="text-xs text-muted-foreground truncate">{registration.email}</p>
+                                      <p className={`font-medium text-foreground truncate ${isMobile ? 'text-xs' : 'text-xs'}`}>{registration.name}</p>
+                                      <p className={`text-muted-foreground truncate ${isMobile ? 'text-xs' : 'text-xs'}`}>{registration.email}</p>
                                     </div>
                                   </div>
                                 </div>
@@ -519,7 +521,7 @@ const MyEvents = () => {
           {/* Registered Events Tab */}
           <TabsContent value="registered" className="space-y-4">
             {myRegistrations.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
                 {myRegistrations.map((reg) => (
                   <Card key={reg.eventId} className={`glass-dark border-border/30 overflow-hidden hover:shadow-md transition-all duration-200 ${
                     reg.status === 'approved' 
@@ -535,17 +537,17 @@ const MyEvents = () => {
                         ? 'bg-destructive'
                         : 'bg-amber-400'
                     }`}></div>
-                    <CardHeader className="p-4 pb-2">
+                    <CardHeader className={isMobile ? 'p-3 pb-2' : 'p-4 pb-2'}>
                       <div>
-                        <CardTitle className="text-base text-foreground mb-1 line-clamp-1">{reg.eventName}</CardTitle>
-                        <div className="flex items-center gap-x-2 text-xs">
+                        <CardTitle className={`text-foreground mb-1 line-clamp-1 ${isMobile ? 'text-sm' : 'text-base'}`}>{reg.eventName}</CardTitle>
+                        <div className={`flex items-center gap-x-2 ${isMobile ? 'flex-wrap gap-y-1' : ''}`}>
                           <Badge variant={
                             reg.status === 'approved' 
                               ? 'secondary' 
                               : reg.status === 'rejected'
                               ? 'destructive'
                               : 'outline'
-                          } className={`text-xs py-0 px-1.5 ${
+                          } className={`py-0 px-1.5 ${isMobile ? 'text-xs' : 'text-xs'} ${
                             reg.status === 'approved' 
                               ? 'bg-emerald-500/10 text-emerald-500' 
                               : reg.status === 'rejected'
@@ -559,15 +561,15 @@ const MyEvents = () => {
                               : 'Pending'}
                           </Badge>
                           {reg.communityName && (
-                            <Badge className="bg-rose-500/10 text-rose-500 border-rose-500/30 text-xs py-0 px-1.5">
+                            <Badge className={`bg-rose-500/10 text-rose-500 border-rose-500/30 py-0 px-1.5 ${isMobile ? 'text-xs' : 'text-xs'}`}>
                               {reg.communityName}
                             </Badge>
                           )}
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-4 pt-2">
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                    <CardContent className={isMobile ? 'p-3 pt-2' : 'p-4 pt-2'}>
+                      <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground ${isMobile ? 'text-xs' : ''}`}>
                         <div className="flex items-center space-x-1.5">
                           <Calendar className="w-3.5 h-3.5" />
                           <span>{reg.eventDate}</span>
@@ -578,19 +580,19 @@ const MyEvents = () => {
                         </div>
                         <div className="flex items-center space-x-1.5">
                           <MapPin className="w-3.5 h-3.5" />
-                          <span className="truncate max-w-[150px]">{reg.eventVenue}</span>
+                          <span className={`truncate ${isMobile ? 'max-w-[100px]' : 'max-w-[150px]'}`}>{reg.eventVenue}</span>
                         </div>
                         <div className="flex items-center space-x-1.5">
                           <User className="w-3.5 h-3.5" />
-                          <span>By {reg.organizerName}</span>
+                          <span className={`${isMobile ? 'truncate max-w-[100px]' : ''}`}>By {reg.organizerName}</span>
                         </div>
                       </div>
                     </CardContent>
                     
                     {reg.status === 'approved' && (
-                      <CardFooter className="p-4 pt-0 flex flex-col items-center">
-                        <div className="bg-secondary/20 w-full rounded-md p-3 flex flex-col items-center">
-                          <p className="text-xs text-muted-foreground mb-2">Event Entry QR Code</p>
+                      <CardFooter className={`flex flex-col items-center ${isMobile ? 'p-3 pt-0' : 'p-4 pt-0'}`}>
+                        <div className={`bg-secondary/20 w-full rounded-md flex flex-col items-center ${isMobile ? 'p-2' : 'p-3'}`}>
+                          <p className={`text-muted-foreground mb-2 ${isMobile ? 'text-xs' : 'text-xs'}`}>Event Entry QR Code</p>
                           <QRVerification 
                             event={{
                               id: reg.eventId,
@@ -600,13 +602,13 @@ const MyEvents = () => {
                               venue: reg.eventVenue
                             }}
                             user={user}
-                            size={100}
+                            size={isMobile ? 80 : 100}
                           />
                         </div>
                         
                         <Button 
                           onClick={() => window.location.href = `/event/${reg.eventId}`}
-                          className="mt-3 w-full bg-primary/10 hover:bg-primary/20 text-primary text-sm h-8"
+                          className={`w-full bg-primary/10 hover:bg-primary/20 text-primary ${isMobile ? 'mt-2 text-xs h-7' : 'mt-3 text-sm h-8'}`}
                           variant="outline"
                         >
                           View Event Details
@@ -615,14 +617,14 @@ const MyEvents = () => {
                     )}
                     
                     {reg.status === 'pending' && (
-                      <CardFooter className="p-4 pt-0">
-                        <p className="text-xs text-muted-foreground">Your registration is being reviewed by the organizer.</p>
+                      <CardFooter className={isMobile ? 'p-3 pt-0' : 'p-4 pt-0'}>
+                        <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>Your registration is being reviewed by the organizer.</p>
                       </CardFooter>
                     )}
                     
                     {reg.status === 'rejected' && (
-                      <CardFooter className="p-4 pt-0">
-                        <p className="text-xs text-destructive/80">Your registration has been declined by the organizer.</p>
+                      <CardFooter className={isMobile ? 'p-3 pt-0' : 'p-4 pt-0'}>
+                        <p className={`text-destructive/80 ${isMobile ? 'text-xs' : 'text-xs'}`}>Your registration has been declined by the organizer.</p>
                       </CardFooter>
                     )}
                   </Card>

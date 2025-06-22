@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { updateProfile, updateEmail } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Event {
   id: string;
@@ -38,6 +39,7 @@ interface UserProfile {
 const Profile = () => {
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true);
   const [userEvents, setUserEvents] = useState<Event[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -230,11 +232,11 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background bg-grid-pattern">
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-background bg-grid-pattern">
         <Card className="glass-dark border-border/30 max-w-md w-full">
           <CardContent className="pt-6 text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Login Required</h2>
-            <p className="text-muted-foreground mb-6">Please login to view your profile.</p>
+            <h2 className={`font-bold text-foreground mb-4 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Login Required</h2>
+            <p className={`text-muted-foreground ${isMobile ? 'mb-4' : 'mb-6'}`}>Please login to view your profile.</p>
             <Button 
               onClick={() => navigate('/')}
               className="bg-primary hover:bg-primary/90"
@@ -249,7 +251,7 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background bg-grid-pattern">
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-background bg-grid-pattern">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading profile...</p>
@@ -259,52 +261,52 @@ const Profile = () => {
   }
   
   return (
-    <div className="min-h-screen p-6 bg-background bg-grid-pattern">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">
+    <div className="min-h-screen p-4 sm:p-6 bg-background bg-grid-pattern">
+      <div className={`mx-auto ${isMobile ? 'max-w-full' : 'max-w-4xl'}`}>
+        <div className={isMobile ? 'mb-6' : 'mb-8'}>
+          <h1 className={`font-bold text-foreground ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
             Profile
           </h1>
-          <p className="text-muted-foreground">
+          <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>
             Manage your personal information and event preferences
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
           {/* Profile Card */}
-          <div className="lg:col-span-1">
+          <div className={isMobile ? '' : 'lg:col-span-1'}>
             <Card className="glass-dark border-border/30 h-full">
-              <CardHeader>
-                <CardTitle className="text-xl text-foreground flex items-center justify-between">
+              <CardHeader className={isMobile ? 'p-4 pb-2' : ''}>
+                <CardTitle className={`text-foreground flex items-center justify-between ${isMobile ? 'text-lg' : 'text-xl'}`}>
                   <span>User Profile</span>
                   {!isEditing && (
                     <Button 
                       onClick={() => setIsEditing(true)} 
                       variant="ghost" 
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      className={`text-muted-foreground hover:text-foreground ${isMobile ? 'h-7 w-7' : 'h-8 w-8'}`}
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
                     </Button>
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent className={isMobile ? 'pt-4 px-4' : 'pt-6'}>
                 {isEditing ? (
                   <div className="space-y-4">
                     <div className="flex justify-center mb-4">
                       <div className="relative">
-                        <Avatar className="h-24 w-24 border-2 border-primary/20">
+                        <Avatar className={`border-2 border-primary/20 ${isMobile ? 'h-20 w-20' : 'h-24 w-24'}`}>
                           <AvatarImage src={profileData.photoURL || ''} alt={profileData.displayName} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                          <AvatarFallback className={`bg-primary/10 text-primary ${isMobile ? 'text-lg' : 'text-xl'}`}>
                             {profileData.displayName?.charAt(0) || user?.email?.charAt(0) || '?'}
                           </AvatarFallback>
                         </Avatar>
                         <label 
                           htmlFor="avatar-upload" 
-                          className="absolute bottom-0 right-0 h-8 w-8 bg-primary text-white rounded-full flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/90 transition-colors"
+                          className={`absolute bottom-0 right-0 bg-primary text-white rounded-full flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/90 transition-colors ${isMobile ? 'h-7 w-7' : 'h-8 w-8'}`}
                         >
-                          <Camera className="h-4 w-4" />
+                          <Camera className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
                           <input 
                             id="avatar-upload" 
                             type="file" 
@@ -448,7 +450,7 @@ const Profile = () => {
                 )}
               </CardContent>
               {isEditing && (
-                <CardFooter className="flex justify-between pt-2 px-6 pb-6">
+                <CardFooter className={`pt-2 ${isMobile ? 'flex-col space-y-2 px-4 pb-4' : 'flex justify-between px-6 pb-6'}`}>
                   <Button 
                     onClick={() => {
                       setIsEditing(false);
@@ -465,12 +467,13 @@ const Profile = () => {
                     }}
                     variant="outline"
                     disabled={saving}
+                    className={isMobile ? 'w-full' : ''}
                   >
                     Cancel
                   </Button>
                   <Button 
                     onClick={handleSaveProfile}
-                    className="bg-primary hover:bg-primary/90" 
+                    className={`bg-primary hover:bg-primary/90 ${isMobile ? 'w-full' : ''}`}
                     disabled={saving}
                   >
                     {saving ? (
@@ -483,7 +486,7 @@ const Profile = () => {
                 </CardFooter>
               )}
               {!isEditing && (
-                <CardFooter className="pt-2 px-6 pb-6">
+                <CardFooter className={`pt-2 ${isMobile ? 'px-4 pb-4' : 'px-6 pb-6'}`}>
                   <Button 
                     onClick={() => navigate('/create-event')} 
                     className="w-full bg-primary hover:bg-primary/90 text-white"
@@ -496,54 +499,54 @@ const Profile = () => {
           </div>
           
           {/* Events section */}
-          <div className="lg:col-span-2">
+          <div className={isMobile ? '' : 'lg:col-span-2'}>
             <Card className="glass-dark border-border/30">
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-xl text-foreground">My Events</CardTitle>
+              <CardHeader className={`flex flex-row items-center justify-between ${isMobile ? 'p-4 pb-2' : 'pb-3'}`}>
+                <CardTitle className={`text-foreground ${isMobile ? 'text-lg' : 'text-xl'}`}>My Events</CardTitle>
                 <Button 
                   onClick={() => navigate('/my-events')} 
                   variant="ghost"
                   size="sm"
-                  className="text-xs text-primary hover:text-primary hover:bg-primary/10"
+                  className={`text-primary hover:text-primary hover:bg-primary/10 ${isMobile ? 'text-xs' : 'text-xs'}`}
                 >
                   View All
                 </Button>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className={`space-y-3 ${isMobile ? 'px-4' : ''}`}>
                 {userEvents.length > 0 ? (
-                  userEvents.slice(0, 3).map(event => (
-                    <div 
-                      key={event.id} 
-                      className="group p-3 rounded-lg glass-dark border border-border/30 hover:border-primary/30 transition-all duration-200 cursor-pointer" 
-                      onClick={() => navigate(`/event/${event.id}`)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-medium text-foreground truncate group-hover:text-primary transition-colors">{event.name}</h3>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-1.5">
-                            <div className="flex items-center space-x-1.5 text-xs text-muted-foreground">
-                              <Calendar className="h-3.5 w-3.5 text-primary/70" />
-                              <span>{event.date}</span>
-                            </div>
-                            <div className="flex items-center space-x-1.5 text-xs text-muted-foreground">
-                              <MapPin className="h-3.5 w-3.5 text-primary/70" />
-                              <span className="truncate max-w-[150px]">{event.venue}</span>
+                                      userEvents.slice(0, 3).map(event => (
+                      <div 
+                        key={event.id} 
+                        className={`group rounded-lg glass-dark border border-border/30 hover:border-primary/30 transition-all duration-200 cursor-pointer ${isMobile ? 'p-2' : 'p-3'}`}
+                        onClick={() => navigate(`/event/${event.id}`)}
+                      >
+                        <div className={`${isMobile ? 'space-y-2' : 'flex justify-between items-start'}`}>
+                          <div className="flex-1 min-w-0">
+                            <h3 className={`font-medium text-foreground truncate group-hover:text-primary transition-colors ${isMobile ? 'text-sm' : 'text-base'}`}>{event.name}</h3>
+                            <div className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 ${isMobile ? 'mt-1' : 'mt-1.5'}`}>
+                              <div className="flex items-center space-x-1.5 text-xs text-muted-foreground">
+                                <Calendar className="h-3.5 w-3.5 text-primary/70" />
+                                <span>{event.date}</span>
+                              </div>
+                              <div className="flex items-center space-x-1.5 text-xs text-muted-foreground">
+                                <MapPin className="h-3.5 w-3.5 text-primary/70" />
+                                <span className={`truncate ${isMobile ? 'max-w-[100px]' : 'max-w-[150px]'}`}>{event.venue}</span>
+                              </div>
                             </div>
                           </div>
+                          <Badge 
+                            variant={event.mode === 'online' ? 'secondary' : 'outline'} 
+                            className={`shrink-0 ${isMobile ? 'w-fit' : 'ml-2'} ${
+                              event.mode === 'online' 
+                                ? 'bg-primary/10 text-primary text-xs py-0 px-1.5' 
+                                : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs py-0 px-1.5'
+                            }`}
+                          >
+                            {event.mode === 'online' ? 'Online' : 'In-Person'}
+                          </Badge>
                         </div>
-                        <Badge 
-                          variant={event.mode === 'online' ? 'secondary' : 'outline'} 
-                          className={`ml-2 shrink-0 ${
-                            event.mode === 'online' 
-                              ? 'bg-primary/10 text-primary text-xs py-0 px-1.5' 
-                              : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs py-0 px-1.5'
-                          }`}
-                        >
-                          {event.mode === 'online' ? 'Online' : 'In-Person'}
-                        </Badge>
                       </div>
-                    </div>
-                  ))
+                    ))
                 ) : (
                   <div className="text-center py-10 bg-secondary/10 rounded-lg border border-border/20">
                     <Calendar className="h-12 w-12 mx-auto text-muted-foreground opacity-30 mb-4" />

@@ -15,6 +15,7 @@ import { db, storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Community {
   id: string;
@@ -32,6 +33,7 @@ interface Community {
 const Community = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true);
   const [communities, setCommunities] = useState<Community[]>([]);
   const [myCommunities, setMyCommunities] = useState<Community[]>([]);
@@ -257,11 +259,11 @@ const Community = () => {
   
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background bg-grid-pattern">
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-background bg-grid-pattern">
         <Card className="glass-dark border-border/30 max-w-md w-full">
           <CardContent className="pt-6 text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Login Required</h2>
-            <p className="text-muted-foreground mb-6">Please login to view communities.</p>
+            <h2 className={`font-bold text-foreground mb-4 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Login Required</h2>
+            <p className={`text-muted-foreground ${isMobile ? 'mb-4' : 'mb-6'}`}>Please login to view communities.</p>
             <Button 
               onClick={() => navigate('/')}
               className="bg-primary hover:bg-primary/90"
@@ -276,7 +278,7 @@ const Community = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background bg-grid-pattern">
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-background bg-grid-pattern">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading communities...</p>
@@ -286,20 +288,20 @@ const Community = () => {
   }
   
   return (
-    <div className="min-h-screen p-6 bg-background bg-grid-pattern">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+    <div className="min-h-screen p-4 sm:p-6 bg-background bg-grid-pattern">
+      <div className={`mx-auto ${isMobile ? 'max-w-full' : 'max-w-6xl'}`}>
+        <div className={`${isMobile ? 'space-y-4 mb-6' : 'flex flex-col md:flex-row justify-between items-start md:items-center mb-8'}`}>
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+            <h1 className={`font-bold text-foreground ${isMobile ? 'text-2xl mb-1' : 'text-3xl mb-2'}`}>
               Communities
             </h1>
-            <p className="text-muted-foreground">
+            <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>
               Connect with others and create events together
             </p>
           </div>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button className="mt-4 md:mt-0 bg-primary hover:bg-primary/90">
+              <Button className={`bg-primary hover:bg-primary/90 ${isMobile ? 'w-full' : 'mt-4 md:mt-0'}`}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Community
               </Button>
@@ -422,13 +424,19 @@ const Community = () => {
         </div>
 
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="all">All Communities</TabsTrigger>
-            <TabsTrigger value="joined">Joined Communities</TabsTrigger>
-            <TabsTrigger value="my">My Communities</TabsTrigger>
+          <TabsList className={`${isMobile ? 'mb-4 w-full grid grid-cols-3' : 'mb-6'}`}>
+            <TabsTrigger value="all" className={isMobile ? 'text-xs' : ''}>
+              {isMobile ? 'All' : 'All Communities'}
+            </TabsTrigger>
+            <TabsTrigger value="joined" className={isMobile ? 'text-xs' : ''}>
+              {isMobile ? 'Joined' : 'Joined Communities'}
+            </TabsTrigger>
+            <TabsTrigger value="my" className={isMobile ? 'text-xs' : ''}>
+              {isMobile ? 'My' : 'My Communities'}
+            </TabsTrigger>
           </TabsList>
           
-          <div className="mb-6">
+          <div className={isMobile ? 'mb-4' : 'mb-6'}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input 
@@ -442,7 +450,7 @@ const Community = () => {
           
           <TabsContent value="all" className="space-y-4">
             {filteredCommunities.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
                 {filteredCommunities.map((community) => {
                   const isJoined = community.members?.includes(user.uid);
                   return (
@@ -451,15 +459,15 @@ const Community = () => {
                       className="glass-dark border-border/30 hover:border-primary/30 transition-colors overflow-hidden flex flex-col cursor-pointer"
                       onClick={() => navigate(`/community/${community.id}`)}
                     >
-                      <div className="relative h-36">
+                      <div className={`relative ${isMobile ? 'h-32' : 'h-36'}`}>
                         <img 
                           src={community.bannerURL || community.imageURL} 
                           alt={community.name} 
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
-                        <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
-                          <h3 className="text-lg font-bold text-foreground">{community.name}</h3>
+                        <div className={`absolute left-3 right-3 flex justify-between items-end ${isMobile ? 'bottom-2' : 'bottom-3'}`}>
+                          <h3 className={`font-bold text-foreground ${isMobile ? 'text-base' : 'text-lg'}`}>{community.name}</h3>
                           <div className="flex items-center text-xs text-muted-foreground">
                             <Users className="h-3 w-3 mr-1" />
                             <span>{community.members?.length || 1}</span>
@@ -467,39 +475,39 @@ const Community = () => {
                         </div>
                       </div>
                       
-                      <CardContent className="p-4 flex-grow">
-                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                      <CardContent className={`flex-grow ${isMobile ? 'p-3' : 'p-4'}`}>
+                        <p className={`text-muted-foreground line-clamp-3 ${isMobile ? 'text-xs mb-3' : 'text-sm mb-4'}`}>
                           {community.description || "No description provided."}
                         </p>
                         <div className="flex items-center">
-                          <Avatar className="h-6 w-6 mr-2">
-                            <AvatarFallback>{community.createdByName?.charAt(0) || '?'}</AvatarFallback>
+                          <Avatar className={`mr-2 ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                            <AvatarFallback className={isMobile ? 'text-xs' : ''}>{community.createdByName?.charAt(0) || '?'}</AvatarFallback>
                           </Avatar>
                           <span className="text-xs text-muted-foreground">Created by {community.createdByName}</span>
                         </div>
                       </CardContent>
                       
-                      <CardFooter className="p-4 pt-0">
+                      <CardFooter className={isMobile ? 'p-3 pt-0' : 'p-4 pt-0'}>
                         {isJoined ? (
                           <Button 
                             variant="outline" 
-                            className="w-full"
+                            className={`w-full ${isMobile ? 'text-sm h-8' : ''}`}
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent card click event
                               handleLeaveCommunity(community.id);
                             }}
                           >
-                            Leave Community
+                            {isMobile ? 'Leave' : 'Leave Community'}
                           </Button>
                         ) : (
                           <Button 
-                            className="w-full bg-primary hover:bg-primary/90"
+                            className={`w-full bg-primary hover:bg-primary/90 ${isMobile ? 'text-sm h-8' : ''}`}
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent card click event
                               handleJoinCommunity(community.id);
                             }}
                           >
-                            Join Community
+                            {isMobile ? 'Join' : 'Join Community'}
                           </Button>
                         )}
                       </CardFooter>
@@ -523,22 +531,22 @@ const Community = () => {
           
           <TabsContent value="joined" className="space-y-4">
             {joinedCommunities.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
                 {joinedCommunities.map((community) => (
                   <Card 
                     key={community.id} 
                     className="glass-dark border-border/30 hover:border-primary/30 transition-colors overflow-hidden flex flex-col cursor-pointer"
                     onClick={() => navigate(`/community/${community.id}`)}
                   >
-                    <div className="relative h-36">
+                    <div className={`relative ${isMobile ? 'h-32' : 'h-36'}`}>
                       <img 
                         src={community.bannerURL || community.imageURL} 
                         alt={community.name} 
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
-                        <h3 className="text-lg font-bold text-foreground">{community.name}</h3>
+                      <div className={`absolute left-3 right-3 flex justify-between items-end ${isMobile ? 'bottom-2' : 'bottom-3'}`}>
+                        <h3 className={`font-bold text-foreground ${isMobile ? 'text-base' : 'text-lg'}`}>{community.name}</h3>
                         <div className="flex items-center text-xs text-muted-foreground">
                           <Users className="h-3 w-3 mr-1" />
                           <span>{community.members?.length || 1}</span>
@@ -546,22 +554,22 @@ const Community = () => {
                       </div>
                     </div>
                     
-                    <CardContent className="p-4 flex-grow">
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                    <CardContent className={`flex-grow ${isMobile ? 'p-3' : 'p-4'}`}>
+                      <p className={`text-muted-foreground line-clamp-3 ${isMobile ? 'text-xs mb-3' : 'text-sm mb-4'}`}>
                         {community.description || "No description provided."}
                       </p>
                       <div className="flex items-center">
-                        <Avatar className="h-6 w-6 mr-2">
-                          <AvatarFallback>{community.createdByName?.charAt(0) || '?'}</AvatarFallback>
+                        <Avatar className={`mr-2 ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                          <AvatarFallback className={isMobile ? 'text-xs' : ''}>{community.createdByName?.charAt(0) || '?'}</AvatarFallback>
                         </Avatar>
                         <span className="text-xs text-muted-foreground">Created by {community.createdByName}</span>
                       </div>
                     </CardContent>
                     
-                    <CardFooter className="p-4 pt-0 flex justify-between gap-2">
+                    <CardFooter className={`pt-0 ${isMobile ? 'p-3 flex-col space-y-2' : 'p-4 flex justify-between gap-2'}`}>
                       <Button 
                         variant="outline" 
-                        className="flex-1"
+                        className={`${isMobile ? 'w-full text-sm h-8' : 'flex-1'}`}
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent card click event
                           handleLeaveCommunity(community.id);
@@ -570,14 +578,14 @@ const Community = () => {
                         Leave
                       </Button>
                       <Button 
-                        className="flex-1 bg-primary hover:bg-primary/90"
+                        className={`bg-primary hover:bg-primary/90 ${isMobile ? 'w-full text-sm h-8' : 'flex-1'}`}
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent card click event
                           navigate(`/create-event?communityId=${community.id}`);
                         }}
                       >
                         <CalendarPlus className="h-4 w-4 mr-2" />
-                        Create Event
+                        {isMobile ? 'Create Event' : 'Create Event'}
                       </Button>
                     </CardFooter>
                   </Card>
@@ -602,22 +610,22 @@ const Community = () => {
           
           <TabsContent value="my" className="space-y-4">
             {myCommunities.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
                 {myCommunities.map((community) => (
                   <Card 
                     key={community.id} 
                     className="glass-dark border-border/30 hover:border-primary/30 transition-colors overflow-hidden flex flex-col cursor-pointer"
                     onClick={() => navigate(`/community/${community.id}`)}
                   >
-                    <div className="relative h-36">
+                    <div className={`relative ${isMobile ? 'h-32' : 'h-36'}`}>
                       <img 
                         src={community.bannerURL || community.imageURL} 
                         alt={community.name} 
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
-                        <h3 className="text-lg font-bold text-foreground">{community.name}</h3>
+                      <div className={`absolute left-3 right-3 flex justify-between items-end ${isMobile ? 'bottom-2' : 'bottom-3'}`}>
+                        <h3 className={`font-bold text-foreground ${isMobile ? 'text-base' : 'text-lg'}`}>{community.name}</h3>
                         <div className="flex items-center text-xs text-muted-foreground">
                           <Users className="h-3 w-3 mr-1" />
                           <span>{community.members?.length || 1}</span>
@@ -625,21 +633,21 @@ const Community = () => {
                       </div>
                     </div>
                     
-                    <CardContent className="p-4 flex-grow">
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                    <CardContent className={`flex-grow ${isMobile ? 'p-3' : 'p-4'}`}>
+                      <p className={`text-muted-foreground line-clamp-3 ${isMobile ? 'text-xs mb-3' : 'text-sm mb-4'}`}>
                         {community.description || "No description provided."}
                       </p>
                       <div className="flex items-center">
-                        <Avatar className="h-6 w-6 mr-2">
-                          <AvatarFallback>{community.createdByName?.charAt(0) || '?'}</AvatarFallback>
+                        <Avatar className={`mr-2 ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                          <AvatarFallback className={isMobile ? 'text-xs' : ''}>{community.createdByName?.charAt(0) || '?'}</AvatarFallback>
                         </Avatar>
                         <span className="text-xs text-muted-foreground">Created by you</span>
                       </div>
                     </CardContent>
                     
-                    <CardFooter className="p-4 pt-0">
+                    <CardFooter className={isMobile ? 'p-3 pt-0' : 'p-4 pt-0'}>
                       <Button 
-                        className="w-full bg-primary hover:bg-primary/90"
+                        className={`w-full bg-primary hover:bg-primary/90 ${isMobile ? 'text-sm h-8' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent card click event
                           navigate(`/create-event?communityId=${community.id}`);
