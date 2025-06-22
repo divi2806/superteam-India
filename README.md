@@ -2,7 +2,7 @@
 
 A event creation website for superteam India. Now discover events acorss India hosted and organized by superteam
 
-![SuperTeam India website]
+[SuperTeam India website]
 
 ## Features
 
