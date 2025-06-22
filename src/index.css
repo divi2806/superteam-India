@@ -1,0 +1,175 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 262 80% 60%;
+    --primary-foreground: 0 0% 98%;
+    
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    
+    --radius: 0.5rem;
+  }
+
+  /* @apply is a Tailwind directive */
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* These use Tailwind's @apply directive */
+  .glass-card {
+    @apply bg-secondary/80 backdrop-blur-sm border border-border/30 rounded-lg shadow-lg;
+  }
+  
+  .glass-dark {
+    @apply bg-background/80 backdrop-blur-sm border border-border/20 rounded-lg shadow-lg;
+  }
+  
+  .shadow-soft {
+    @apply shadow-md shadow-black/5;
+  }
+  
+  .shadow-large {
+    @apply shadow-lg shadow-black/10;
+  }
+  
+  .custom-marker {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, theme('colors.primary.DEFAULT'), theme('colors.primary.DEFAULT/90'));
+    border: 3px solid theme('colors.primary.DEFAULT/20');
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 12px theme('colors.primary.DEFAULT/30');
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+}
+
+@layer utilities {
+  .glass-dark {
+    background: rgba(23, 23, 28, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .shadow-soft {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+  
+  @keyframes bell-ring {
+    0%, 100% {
+      transform: rotate(0);
+    }
+    5%, 15%, 25% {
+      transform: rotate(10deg);
+    }
+    10%, 20%, 30% {
+      transform: rotate(-10deg);
+    }
+    35% {
+      transform: rotate(5deg);
+    }
+    40% {
+      transform: rotate(-5deg);
+    }
+    45% {
+      transform: rotate(0);
+    }
+  }
+  
+  .animate-bell {
+    animation: bell-ring 2s ease infinite;
+    transform-origin: top center;
+  }
+  
+  @keyframes pulse-subtle {
+    0%, 100% {
+      opacity: 0.1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+  
+  .animate-pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* Staggered animation delays for menu items */
+  .menu-item-animation {
+    opacity: 0;
+    animation-fill-mode: forwards;
+  }
+
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: center center;
+    background-attachment: fixed;
+    background-color: hsl(var(--background));
+    position: relative;
+  }
+
+  .bg-grid-pattern::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(
+        circle at center,
+        rgba(112, 63, 195, 0.08) 0%,
+        rgba(112, 63, 195, 0.03) 35%,
+        rgba(255, 255, 255, 0) 80%
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Make content appear above the gradient overlay */
+  .bg-grid-pattern > * {
+    position: relative;
+    z-index: 1;
+  }
+}
