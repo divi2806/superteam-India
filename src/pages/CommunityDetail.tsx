@@ -1584,13 +1584,13 @@ const CommunityDetail = () => {
                         >
                           <CardContent className="p-0">
                             <div className="flex items-start gap-4 p-4">
-                                                             {/* Date Badge - Compact Luma Style */}
+                                                             {/* Date Badge - Enhanced Minimal Design */}
                                <div className="flex-shrink-0">
-                                 <div className="w-14 h-14 rounded-md bg-secondary/30 border border-border/30 flex flex-col items-center justify-center text-center shadow-sm">
-                                   <div className="text-[10px] font-semibold text-primary uppercase tracking-wider leading-none">
+                                 <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex flex-col items-center justify-center text-center shadow-md hover:shadow-lg transition-shadow">
+                                   <div className="text-xs font-bold text-primary uppercase tracking-wide leading-none">
                                      {formatEventDate()}
                                    </div>
-                                   <div className="text-[9px] text-muted-foreground mt-1 capitalize leading-none">
+                                   <div className="text-[11px] text-foreground/80 mt-0.5 font-medium capitalize leading-none">
                                      {getDayName().slice(0, 3)}
                                    </div>
                                  </div>
@@ -1644,11 +1644,11 @@ const CommunityDetail = () => {
                               {/* Event Image */}
                               {event.imageURL && (
                                 <div className="flex-shrink-0">
-                                  <div className="w-20 h-16 rounded-lg overflow-hidden">
+                                  <div className="w-28 h-20 rounded-lg overflow-hidden shadow-sm border border-border/20">
                                     <img 
                                       src={event.imageURL} 
                                       alt={event.name} 
-                                      className="w-full h-full object-cover"
+                                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                                     />
                                   </div>
                                 </div>
@@ -1743,13 +1743,13 @@ const CommunityDetail = () => {
                     >
                       <CardContent className="p-0">
                         <div className="flex items-start gap-4 p-4">
-                          {/* Date Badge - Compact Luma Style */}
+                          {/* Date Badge - Enhanced Minimal Design */}
                           <div className="flex-shrink-0">
-                            <div className="w-14 h-14 rounded-md bg-secondary/30 border border-border/30 flex flex-col items-center justify-center text-center shadow-sm">
-                              <div className="text-[10px] font-semibold text-primary uppercase tracking-wider leading-none">
+                            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex flex-col items-center justify-center text-center shadow-md hover:shadow-lg transition-shadow">
+                              <div className="text-xs font-bold text-primary uppercase tracking-wide leading-none">
                                 {formatEventDate()}
                               </div>
-                              <div className="text-[9px] text-muted-foreground mt-1 capitalize leading-none">
+                              <div className="text-[11px] text-foreground/80 mt-0.5 font-medium capitalize leading-none">
                                 {getDayName().slice(0, 3)}
                               </div>
                             </div>
@@ -1803,11 +1803,11 @@ const CommunityDetail = () => {
                           {/* Event Image */}
                           {event.imageURL && (
                             <div className="flex-shrink-0">
-                              <div className="w-20 h-16 rounded-lg overflow-hidden">
+                              <div className="w-28 h-20 rounded-lg overflow-hidden shadow-sm border border-border/20">
                                 <img 
                                   src={event.imageURL} 
                                   alt={event.name} 
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                                 />
                               </div>
                             </div>

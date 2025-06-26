@@ -241,6 +241,35 @@ export const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }
 
         if (parentId) {
           try {
+            // Check if user was previously approved for any recurring events by this organizer
+            let isReturningUser = false;
+            
+            try {
+              const previousRecurringEventsQuery = query(
+                collection(db, 'events'),
+                where('createdBy', '==', currentEvent.createdBy),
+                where('isRecurring', '==', true)
+              );
+              
+              const previousEventsSnapshot = await getDocs(previousRecurringEventsQuery);
+              
+              // Check if user was approved in any previous recurring events by this organizer
+              for (const doc of previousEventsSnapshot.docs) {
+                const eventData = doc.data();
+                if (eventData.registrations) {
+                  const userWasApproved = eventData.registrations.some((reg: any) => 
+                    reg.userId === user.uid && reg.status === 'approved'
+                  );
+                  if (userWasApproved) {
+                    isReturningUser = true;
+                    break;
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('Error checking returning user status:', error);
+            }
+
             // Get all events in the recurring series
             const allRecurringEventsQuery = query(
               collection(db, 'events'),
@@ -280,13 +309,14 @@ export const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }
                 return; // Skip this event as user is already registered
               }
 
-              if (event.requireApproval) {
-                // Add to pending registrations
+              // Smart approval logic: returning users get auto-approved, new users go to pending
+              if (event.requireApproval && !isReturningUser) {
+                // New user - add to pending registrations
                 await updateDoc(doc(db, 'events', event.id), {
                   pendingRegistrations: arrayUnion(registrationData),
                 });
               } else {
-                // Add directly to approved registrations
+                // Returning user OR event doesn't require approval - add directly to approved
                 await updateDoc(doc(db, 'events', event.id), {
                   registrations: arrayUnion({
                     ...registrationData,
@@ -298,9 +328,13 @@ export const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }
 
             await Promise.all(registrationPromises);
 
+            const autoApprovedMessage = isReturningUser && currentEvent.requireApproval 
+              ? " You've been auto-approved as a returning participant!"
+              : "";
+
             toast({
               title: 'Recurring Event Registration',
-              description: `You've been registered for all ${futureEvents.length} upcoming occurrences of this recurring event!`,
+              description: `You've been registered for all ${futureEvents.length} upcoming occurrences of this recurring event!${autoApprovedMessage}`,
             });
           } catch (error) {
             console.error('Error registering for recurring events:', error);
@@ -353,7 +387,7 @@ export const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }
       }
 
       setHasRegistered(true);
-      setRegistrationStatus(currentEvent.requireApproval ? 'pending' : 'approved');
+      setRegistrationStatus('pending');
       setIsRegistering(false);
     } catch (error) {
       console.error('Error registering for event:', error);
@@ -664,10 +698,10 @@ export const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }
             {/* Event details */}
             <div className="flex flex-col gap-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-3">
-                {/* Date Badge - Compact Luma Style */}
+                {/* Date Badge - Enhanced Minimal Design */}
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-md bg-secondary/30 border border-border/30 flex flex-col items-center justify-center text-center shadow-sm">
-                    <div className="text-[10px] font-semibold text-primary uppercase tracking-wider leading-none">
+                  <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex flex-col items-center justify-center text-center shadow-md">
+                    <div className="text-xs font-bold text-primary uppercase tracking-wide leading-none">
                       {(() => {
                         const eventDate = new Date(currentEvent.date);
                         const today = new Date();
@@ -686,7 +720,7 @@ export const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }
                         });
                       })()}
                     </div>
-                    <div className="text-[9px] text-muted-foreground mt-1 capitalize leading-none">
+                    <div className="text-[11px] text-foreground/80 mt-0.5 font-medium capitalize leading-none">
                       {new Date(currentEvent.date).toLocaleDateString('en-US', { weekday: 'long' }).slice(0, 3)}
                     </div>
                   </div>

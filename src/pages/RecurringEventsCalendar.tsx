@@ -248,8 +248,8 @@ const RecurringEventsCalendar = () => {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className="min-w-14 w-14 h-14 rounded-lg flex flex-col items-center justify-center bg-secondary/30 text-center">
-                        <span className="text-xs text-muted-foreground font-medium">
+                      <div className="min-w-16 w-16 h-16 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex flex-col items-center justify-center text-center shadow-md">
+                        <span className="text-xs font-bold text-primary uppercase tracking-wide leading-none">
                           {format(parseISO(event.date), 'MMM')}
                         </span>
                         <span className="text-lg font-bold text-foreground">
@@ -324,8 +324,8 @@ const RecurringEventsCalendar = () => {
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
-                            <div className="min-w-14 w-14 h-14 rounded-lg flex flex-col items-center justify-center bg-secondary/30 text-center">
-                              <span className="text-xs text-muted-foreground font-medium">
+                            <div className="min-w-16 w-16 h-16 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex flex-col items-center justify-center text-center shadow-md">
+                              <span className="text-xs font-bold text-primary uppercase tracking-wide leading-none">
                                 {format(parseISO(event.date), 'MMM')}
                               </span>
                               <span className="text-lg font-bold text-foreground">

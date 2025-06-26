@@ -477,6 +477,7 @@ const CreateEvent = () => {
         createdBy: user.uid,
         createdByName: user.displayName,
         createdAt: new Date(),
+        requireApproval: eventData.requireApproval,
         ...(imageURL && { imageURL }),
         ...(eventData.mode === 'offline' && { coordinates: eventData.coordinates }),
         ...(eventData.communityId && { 
@@ -573,8 +574,8 @@ const CreateEvent = () => {
           await addDoc(collection(db, 'events'), {
             ...eventBaseData,
             date,
-            registrations: eventData.requireApproval ? [] : autoRegistrations, // Auto-register only if no approval required
-            pendingRegistrations: eventData.requireApproval ? autoRegistrations : [], // Add to pending if approval required
+            registrations: eventBaseData.requireApproval ? [] : autoRegistrations, // Auto-register only if no approval required
+            pendingRegistrations: eventBaseData.requireApproval ? autoRegistrations : [], // Add to pending if approval required
             hasNotifications: false,
             notifications: [],
             isRecurringChild: true,
@@ -588,8 +589,8 @@ const CreateEvent = () => {
         // Also update the main event with auto-registrations
         if (autoRegistrations.length > 0) {
           await updateDoc(mainEventDocRef, {
-            registrations: eventData.requireApproval ? [] : autoRegistrations,
-            pendingRegistrations: eventData.requireApproval ? autoRegistrations : []
+            registrations: eventBaseData.requireApproval ? [] : autoRegistrations,
+            pendingRegistrations: eventBaseData.requireApproval ? autoRegistrations : []
           });
         }
         
